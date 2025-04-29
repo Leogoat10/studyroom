@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>课程占用</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/constant.js"></script>
+    <script src="../lib/layui/layui.all.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+</head>
+<body>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+    <legend>教室查询</legend>
+</fieldset>
+<table id="roomTable" lay-filter="roomTableFilter"></table>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+    <legend>教室占用——只可占用3天（72小时）后的教室</legend>
+</fieldset>
+<form class="layui-form layui-form-pane" action="">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">课程日期</label>
+            <div class="layui-input-block">
+                <input type="text" name="date" id="date1" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="start" placeholder="请选择开始时间">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">结束时间</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="end" placeholder="请选择结束时间">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">课程名</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="coursename" placeholder="请输入课程名">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">公告</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="announcement">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">预约地点</label>
+        <div class="layui-input-inline">
+            <input type="text" name="room" id="room" placeholder="请输入教室号" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <button id="button1" class="layui-btn" lay-submit="" lay-filter="demo1">确定</button>
+    </div>
+</form>
+<div class="layui-form">
+    <table id="demo1" class="layui-table"></table>
+</div>
+</body>
+
+
+<script src="../lib/layui/layui.js"></script>
+<!--教室查询-->
+<script type="text/html" id="roomToolbar">
+    <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="viewCourses">查看课程</a>
+</script>
+
+<script>
+    layui.use(['table', 'layer'], function(){
+        var table = layui.table,
+            layer = layui.layer;
+
+        // 渲染教室表格
+        table.render({
+            id: 'roomTable',
+            elem: '#roomTable',
+            url: '/room/roomlist',
+            page: true,
+            limit: 10,
+            even: true,
+            loading: true,
+            cols: [[
+                {field: 'num', title: '教室编号', width: 150, fixed: 'left', sort: true},
+                {field: 'school', title: '所属学校', width: 150, sort: true},
+                {field: 'capacity', title: '教室容量(人)', width: 150, sort: true},
+                {field: 'status', title: '当前时段', width: 200, sort: true,
+                    templet: function (d) {
+                        return d.status === 1 ?
+                            "<span class='layui-badge layui-bg-green'>可预约</span>" :
+                            "<span class='layui-badge layui-bg-red'>不可预约</span>";
+                    }
+                },
+                {fixed: 'right', title: '操作', toolbar: '#roomToolbar', width: 200}
+            ]],
+            done: function(res, curr, count){
+                if(count === 0){
+                    $('.layui-table-body').html('<div class="layui-none">暂无教室数据</div>');
+                }
+            }
+        });
+        // 设置定时器每分钟刷新一次表格
+        setInterval(function() {
+            table.reload('roomTable');
+        }, 30000);
+
+        // 工具条事件
+        table.on('tool(roomTableFilter)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'viewCourses'){
+                layer.open({
+                    type: 1,
+                    title: '教室 ' + data.num + ' 今日课程安排',
+                    area: ['800px', '500px'],
+                    content: '<table id="todayCourseTable" class="layui-table" lay-filter="todayCourseFilter"></table>',
+                    success: function () {
+                        table.render({
+                            elem: '#todayCourseTable',
+                            url: '/course/courselistByroomtoday?num=' + data.num,
+                            page: false,
+                            loading: true,
+                            cols: [[
+                                {field: 'date', title: '日期', width: 150, sort: true},
+                                {field: 'coursename', title: '课程名', width: 120, sort: true},
+                                {field: 'room', title: '教室号', width: 100, sort: true},
+                                {field: 'starttime', title: '开始时间', width: 150, sort: true},
+                                {field: 'endtime', title: '结束时间', width: 150, sort: true},
+                                {field: 'announcement', title: '公告', width: 120, sort: true}
+                            ]],
+                            done: function(res, curr, count){
+                                if(count === 0){
+                                    $('#todayCourseTable').html('<div class="layui-none">今日该教室暂无课程安排</div>');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+<!--预约结果数据-->
+<script>
+    layui.use('table', function(){
+        table = layui.table;
+        //第一个实例
+        tableIns=table.render({
+            elem: '#demo1'
+            ,width:950
+            ,height: 700
+            ,url: '/course/courselist' //数据接口
+            ,page: true //开启分页
+            ,limit: 10
+            ,cols: [[ //表头
+                {field: 'date', title: '日期', fixed: 'left',width:150, sort: true}
+                ,{field: "coursename", title: '课程名',width:100, sort: true}
+                ,{field: "room", title: '教室号',width:100, sort: true}
+                ,{field: "starttime", title: '开始时间',width:220, sort: true}
+                ,{field: "endtime", title: '结束时间',width:220, sort: true}
+                ,{field: "announcement", title: '公告',width:300, sort: true}
+            ]]
+        });
+    });
+</script>
+<!--预约选项-->
+<script>
+    $("#button1").click(function () {
+        let date = $("#date1").val().trim();
+        let starttime = $("#start").val().trim();
+        let endtime = $("#end").val().trim();
+        let coursename = $("#coursename").val().trim();
+        let announcement = $("#announcement").val().trim();
+        let room = $("#room").val().trim();  // 更新为获取文本输入框的值
+        if (date == '' || date == null) {
+            layer.msg("日期不能为空");
+            return false;
+        }else if (starttime == '' || starttime == null) {
+            layer.msg("开始时间不能为空");
+            return false;
+        }else if (endtime == '' || endtime == null){
+            layer.msg("结束时间不能为空");
+            return false;
+        }else if (coursename == '' || coursename == null){
+            layer.msg("课程名不能为空");
+            return false;
+        }else if (room == '' || room == null){  // 更新为检查文本输入
+            layer.msg("教室号不能为空");
+            return false;
+        }
+        $.ajax({
+            type: 'post',
+            url: RequestURL + '/course/startCourse',
+            data: {
+                "date": date,
+                "starttime": starttime,
+                "endtime": endtime,
+                "coursename": coursename,
+                "room": room,
+                "announcement": announcement,
+            },
+            success: function (data) {
+                if (data.code == 0){
+                    layer.msg(data.msg);
+                    table.reload('demo');
+                }else {
+                    layer.msg(data.msg);
+                }
+            },
+            error: function() {
+                layer.msg("请求失败，请稍后再试");
+            }
+        });
+        return false;
+    });
+</script>
+<!--预约监听-->
+<script>
+    layui.use(['form',  'laydate'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,laydate = layui.laydate;
+
+        //日期
+        laydate.render({
+            elem: '#date'
+        });
+        laydate.render({
+            elem: '#date1'
+        });
+
+        //监听提交
+        /*form.on('submit(demo1)', function(data){
+            layer.alert(JSON.stringify(data.field), {
+                title: '预约信息'
+            })
+            return false;
+        });*/
+        //时间选择
+        laydate.render({
+            elem: '#start'
+            ,type: 'time'
+            ,format: 'H点m分'
+        });
+
+        laydate.render({
+            elem: '#end'
+            ,type: 'time'
+            ,format: 'H点m分'
+        });
+    });
+</script>
+</html>

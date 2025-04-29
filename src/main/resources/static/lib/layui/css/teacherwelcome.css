@@ -1,0 +1,64 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    overflow: hidden;
+    /*background: url("../images/login/welcome.jpeg") no-repeat center center fixed;*/
+    background-size: cover;
+}
+.intro {
+    /*left: calc(50% - 480.5px);
+  top: calc(50% - 84.5px);*/
+
+    position: absolute;
+    opacity: 0;
+}
+h1 {
+    white-space: nowrap;
+    margin: 0;
+    color: #0b0561;
+    font-weight: 100;
+    font-family: 'Roboto', sans-serif;
+    font-size: 8em;
+    float: top;
+    text-align: center;
+    line-height: 1.2em;
+    -webkit-animation: fadein 1s;
+}
+a {
+    font-weight: 700;
+}
+.underline {
+    position: relative;
+    height: 4px;
+    width: 100%;
+    left: 0px;
+    background-color: #2b1a86;
+}
+@-webkit-keyframes easein {
+    0% {
+        width: 0;
+        left: 50%;
+    }
+}
+@-webkit-keyframes fadein {
+    0% {
+        opacity: 0;
+    }
+}
+@media (max-width: 1000px) {
+    h1 {
+        font-size: 5em;
+    }
+    .underline {
+        height: 2px;
+    }
+}
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2.5em;
+    }
+    .underline {
+        height: 1px;
+    }
+}

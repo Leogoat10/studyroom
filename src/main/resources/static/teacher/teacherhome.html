@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>老师主页</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/constant.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+</head>
+<body class="layui-layout-body">
+  <div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+      <div class="layui-logo">宁大自习室</div>
+      <ul class="layui-nav layui-layout-right">
+        <li class="layui-nav-item">
+          <img src="http://t.cn/RCzsdCq" class="layui-nav-img">
+          <span id="roleName">老师</span>
+        </li>
+        <li class="layui-nav-item"><a href="#" id="teacherLogout">注销</a></li>
+      </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+      <div class="layui-side-scroll">
+        <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+        <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+          <li class="layui-nav-item">
+            <a href="teacher.html" target="contentMainArea">个人信息</a>
+          </li>
+          <li class="layui-nav-item"><a href="occupy.html" target="contentMainArea">课程占用</a></li>
+          <li class="layui-nav-item"><a href="information.html" target="contentMainArea">通知</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="layui-body">
+      <!-- 内容主体区域 -->
+      <iframe style="padding: 15px;width: 100%; height:90%;" name="contentMainArea" src="teacherwelcome.html">
+      </iframe>
+    </div>
+  </div>
+  <script src="../lib/layui/layui.js"></script>
+  <script>
+    $(function () {
+      $("#teacherLogout").click(function () {
+        let r = confirm("确定退出?");
+        if(r){
+          $.ajax({
+            type:'get',
+            url: "/teacher/logout",
+            headers: {
+              "Authorization":getCookie("token"),
+            },
+            success: function(data) {
+              window.location.href="../main.html";
+            }
+          });
+        }
+      });
+    });
+    layui.use('element', function(){
+      var element = layui.element;
+    });
+
+    //当页面一加载时就向后台发送post请求
+    $(function(){
+      $.get("/teacher/getteachername",function(obj){
+        $("#roleName").html(obj.username);
+      },"json")
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>老师注册</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="../lib/constant.js"></script>
+  <script src="../lib/jquery-3.4.1.js"></script>
+  <script src="../lib/ajax.js"></script>
+  <script src="../lib/layui/layui.all.js"></script>
+  <link rel="stylesheet" href="../lib/layui/css/layui.css">
+  <style>
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      color: #333;
+    }
+
+    .auth-container {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 900px;
+      max-width: 90%;
+      min-height: 550px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .auth-container:hover {
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-container {
+      padding: 40px;
+      width: 50%;
+      transition: all 0.6s ease-in-out;
+      position: absolute;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sign-in {
+      left: 0;
+      opacity: 1;
+      z-index: 2;
+    }
+
+    .sign-up {
+      left: 0;
+      opacity: 0;
+      z-index: 1;
+    }
+
+    .overlay-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      transition: all 0.6s ease-in-out;
+      z-index: 10;
+    }
+    .overlay {
+      background: linear-gradient(to right, #5a6fd1, #6a4199);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: 0 0;
+      color: #fff;
+      position: relative;
+      left: -100%;
+      height: 100%;
+      width: 200%;
+      transform: translateX(0);
+      transition: all 0.6s ease-in-out;
+    }
+
+    .overlay-panel {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 0 40px;
+      text-align: center;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      transform: translateX(0);
+      transition: all 0.6s ease-in-out;
+    }
+
+    .overlay-left {
+      transform: translateX(-20%);
+    }
+
+    .overlay-right {
+      right: 0;
+      transform: translateX(0);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-header h2 {
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #3a3a3a;
+    }
+
+    .auth-header i {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      transition: all 0.3s;
+      height: auto;
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .btn-auth {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    .btn-auth:hover {
+      background: linear-gradient(135deg, #5a6fd1 0%, #6a4199 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-btn {
+      background-color: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      padding: 10px 30px;
+      border-radius: 20px;
+      border: 1px solid #fff;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .toggle-btn:active {
+      transform: scale(0.95);
+    }
+
+    .password-match {
+      color: #28a745;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .password-mismatch {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    /* 切换动画 */
+    .auth-container.right-panel-active .sign-in {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .auth-container.right-panel-active .sign-up {
+      transform: translateX(100%);
+      opacity: 1;
+      z-index: 5;
+    }
+
+    .auth-container.right-panel-active .overlay-container {
+      transform: translateX(-100%);
+    }
+
+    .auth-container.right-panel-active .overlay {
+      transform: translateX(50%);
+    }
+
+    .auth-container.right-panel-active .overlay-left {
+      transform: translateX(0);
+    }
+
+    .auth-container.right-panel-active .overlay-right {
+      transform: translateX(20%);
+    }
+
+    /* 消息提示框 */
+    #msg {
+      position: fixed;
+      z-index: 9999;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 400px;
+      width: 90%;
+      display: none;
+    }
+
+    #msg_top {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 20px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #msg_top span {
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    #msg_cont {
+      padding: 20px;
+      text-align: left;
+      color: #555;
+    }
+
+    #msg_clear {
+      display: block;
+      text-align: center;
+      color: #fff;
+      padding: 8px 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 0 0 8px 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    #msg_clear:hover {
+      background: linear-gradient(135deg, #5a6fd1 0%, #6a4199 100%);
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+      .auth-container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .form-container, .overlay-container {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+
+      .overlay-container {
+        left: 0;
+        top: 50%;
+        height: 200px;
+      }
+
+      .overlay {
+        left: 0;
+        top: -100%;
+        width: 100%;
+        height: 200%;
+      }
+
+      .auth-container.right-panel-active .overlay-container {
+        transform: translateY(-100%);
+        left: 0;
+      }
+    }
+
+    .scroll-wrapper {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+      scrollbar-width: thin;
+    }
+
+    /* Custom select styles */
+    .select {
+      width: 100%;
+    }
+
+    .form-select {
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-container" id="authContainer">
+  <!-- 登录表单 -->
+  <div class="form-container sign-in">
+    <form>
+      <div class="auth-header">
+        <i class="fas fa-sign-in-alt"></i>
+        <h2>欢迎回来</h2>
+      </div>
+      <div class="mb-3">
+        <label for="user" class="form-label">账号</label>
+        <input type="text" class="form-control" id="user" placeholder="请输入您的账号">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">密码</label>
+        <input type="password" class="form-control" id="password" placeholder="请输入您的密码">
+      </div>
+      <button type="button" class="btn btn-auth" onclick="userLogin()">
+        <i class="fas fa-sign-in-alt me-2"></i>登 录
+      </button>
+    </form>
+  </div>
+
+  <!-- 注册表单 -->
+  <div class="form-container sign-up">
+    <div class="scroll-wrapper">
+      <form>
+        <div class="auth-header">
+          <i class="fas fa-user-plus"></i>
+          <h2>立即注册</h2>
+        </div>
+        <div class="mb-3">
+          <label for="username" class="form-label">用户名</label>
+          <input type="text" class="form-control" id="username" placeholder="请输入用户名">
+        </div>
+        <div class="mb-3">
+          <label for="newpassword" class="form-label">密码</label>
+          <input type="password" class="form-control" id="newpassword" placeholder="请输入密码">
+        </div>
+        <div class="mb-3">
+          <label for="repassword" class="form-label">确认密码</label>
+          <input type="password" class="form-control" id="repassword" placeholder="请再次输入密码" onkeyup="validate()">
+          <span id="tishi" class="password-mismatch"></span>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">邮箱</label>
+          <input type="email" class="form-control" id="email" placeholder="请输入邮箱">
+        </div>
+        <div class="mb-3">
+          <label for="phone" class="form-label">手机号</label>
+          <input type="tel" class="form-control" id="phone" placeholder="请输入手机号">
+        </div>
+        <div class="mb-3">
+          <label for="schoolselected" class="form-label">学校</label>
+          <select class="form-select" id="schoolselected">
+            <option value="宁波大学本部">宁波大学本部</option>
+            <option value="宁波大学西区">宁波大学西区</option>
+            <option value="宁波大学北区">宁波大学北区</option>
+            <option value="宁波大学梅山校区">宁波大学梅山校区</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-auth" id="submit" onclick="check1();check2();teacherRegiste();checkphone();checkemail()">
+          <i class="fas fa-user-plus me-2"></i>注 册
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 覆盖层 -->
+  <div class="overlay-container">
+    <div class="overlay">
+      <div class="overlay-panel overlay-left">
+        <h2>已有帐号？</h2>
+        <p>有帐号就登录吧，好久不见了！</p>
+        <button class="toggle-btn" id="signIn">登 录</button>
+      </div>
+      <div class="overlay-panel overlay-right">
+        <h2>还未注册？</h2>
+        <p>立即注册，加入我们！</p>
+        <button class="toggle-btn" id="signUp">注 册</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="msg" style="display:none;">
+  <div id="msg_top">提示<span class="msg_close">×</span></div>
+  <div id="msg_cont"></div>
+  <div id="msg_clear" class="msg_close">确定</div>
+</div>
+</body>
+<!-- jQuery 和 Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  window.alert = function(e) {
+    $("#msg_cont").html(e);
+    $("#msg").fadeIn();
+
+    // 统一关闭处理
+    $(".msg_close").off('click').on('click', function() {
+      $("#msg").fadeOut();
+    });
+  };
+
+  // 切换登录/注册面板
+  const signUpButton = document.getElementById('signUp');
+  const signInButton = document.getElementById('signIn');
+  const container = document.getElementById('authContainer');
+
+  signUpButton.addEventListener('click', () => {
+    container.classList.add('right-panel-active');
+  });
+
+  signInButton.addEventListener('click', () => {
+    container.classList.remove('right-panel-active');
+  });
+
+  // 原有功能函数保持不变
+  function userLogin(){
+    let name = $("#user").val().trim();
+    let pwd = $("#password").val().trim();
+    if(check(name,pwd)) {
+      var obj = JSON.stringify({
+        "username":name,
+        "password":pwd
+      })
+      $.ajax({
+        async: true,
+        type:'post',
+        url:"/teacher/login",
+        data: obj,
+        contentType:"application/json",
+        success: function(result) {
+          if(result.code==200){
+            window.location.href="teacherhome.html";
+          }
+          else if(result.code==400){
+            alert("账号或密码错误");
+          }
+        },
+        complete(xhr,data){
+          var token = xhr.getResponseHeader("Authorization");
+          addCookie("token",token,7200);
+        }
+      });
+    }
+  }
+
+  function teacherRegiste() {
+    let username=$("#username").val().trim();
+    let newpassword=$("#newpassword").val().trim();
+    let repassword=$("#repassword").val().trim();
+    let email=$("#email").val().trim();
+    let phone=$("#phone").val().trim();
+    let school=$("#schoolselected option:selected").text();
+
+    if(check(username,newpassword,repassword,school)){
+      var obj = JSON.stringify({
+        "phone": phone,
+        "password": newpassword,
+        "username": username,
+        "school": school,
+        "email": email
+      })
+
+      $.ajax({
+        async: true,
+        type:'post',
+        url: RequestURL+"/teacher/save",
+        data: obj,
+        contentType:"application/json",
+        success: function(data) {
+          if(data.status===200){
+            alert('注册成功');
+            // 注册成功后跳转
+            setTimeout(function() {
+              window.location.href="login.html";
+            }, 1500); // 1.5秒后跳转，让用户看到提示
+          }else{
+            alert(data.msg);
+          }
+        },
+        error: function() {
+          alert("注册请求失败，请稍后重试");
+        }
+      });
+    }
+  }
+
+  function check(username,password){
+    if(username==''||username==null||password==''||password==null) {
+      alert("请输入用户名/密码");
+      return false;
+    }
+    return true;
+  }
+
+  function check1(){
+    if(username.value==''||username.value==null) {
+      alert("请输入用户名");
+      return false;
+    }
+    return true;
+  }
+  function check2(){
+    if(newpassword.value==''||newpassword.value==null) {
+      alert("请输入密码");
+      return false;
+    }
+    return true;
+  }
+  function validate() {
+    var newpassword = document.getElementById("newpassword").value;
+    var repassword = document.getElementById("repassword").value;
+    if(newpassword == repassword) {
+      document.getElementById("tishi").innerHTML="<i class='fas fa-check-circle me-2'></i>两次密码相同";
+      document.getElementById("tishi").className = "password-match";
+      document.getElementById("submit").disabled = false;
+    }
+    else {
+      document.getElementById("tishi").innerHTML="<i class='fas fa-times-circle me-2'></i>两次密码不相同";
+      document.getElementById("tishi").className = "password-mismatch";
+      document.getElementById("submit").disabled = true;
+    }
+  }
+  //检查手机号码格式
+  function checkphone(){
+    var phone = document.getElementById('phone').value;
+    if(!(/^1[3|4|5|6|7|8|9]\d{9}$/.test(phone))){
+      alert("手机号码有误，请重填");
+      return false;
+    }
+  }
+  // 检查输入的数据是不是邮箱格式
+  function checkemail(){
+    var email = document.getElementById("email");
+    var reg =/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+    if (!reg.test(email.value)) {
+      alert("邮箱格式错误，请重新输入！");
+      return false;
+      document.getElementById("email").value="";
+    }
+  }
+</script>
+</html>

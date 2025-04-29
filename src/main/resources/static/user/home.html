@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>用户主页</title>
+  <script src="../lib/jquery-3.4.1.js"></script>
+  <script src="../lib/constant.js"></script>
+  <link rel="stylesheet" href="../lib/layui/css/layui.css">
+</head>
+<body class="layui-layout-body">
+  <div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+      <div class="layui-logo">宁大</div>
+      <ul class="layui-nav layui-layout-right">
+        <li class="layui-nav-item">
+          <img src="http://t.cn/RCzsdCq" class="layui-nav-img">
+          <span id="roleName">用户</span>
+        </li>
+        <li class="layui-nav-item"><a href="#" id="adminLogout">注销</a></li>
+      </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+      <div class="layui-side-scroll">
+        <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+        <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+          <li class="layui-nav-item">
+            <a href="user.html" target="contentMainArea" id="userinfo">个人信息</a>
+          </li>
+          <li class="layui-nav-item"><a href="attendance.html" target="contentMainArea">签到</a></li>
+          <li class="layui-nav-item"><a href="information.html" target="contentMainArea">通知查看</a></li>
+          <li class="layui-nav-item"><a href="booking.html" target="contentMainArea">预约记录</a></li>
+          <li class="layui-nav-item"><a href="violation.html" target="contentMainArea">违规记录</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="layui-body">
+      <!-- 内容主体区域 -->
+      <iframe style="padding: 15px;width: 100%; height:90%;" name="contentMainArea" src="../user/userwelcome.html">
+      </iframe>
+    </div>
+  </div>
+  <script src="../lib/layui/layui.js"></script>
+  <script>
+    $(function () {
+      $("#adminLogout").click(function () {
+        let r = confirm("确定退出?");
+        if(r){
+          $.ajax({
+            type:'get',
+            url: "/user/logout",
+            headers: {
+              "Authorization":getCookie("token"),
+            },
+            success: function(data) {
+              window.location.href="login.html";
+            }
+          });
+        }
+      });
+    });
+    layui.use('element', function(){
+      var element = layui.element;
+    });
+
+    //当页面一加载时就向后台发送post请求
+    $(function(){
+      $.get("/user/getusername",function(obj){
+        $("#roleName").html(obj.username);
+      },"json")
+    });
+  </script>
+
+</body>
+</html>

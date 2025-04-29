@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jason.classroom.mapper.TableMapper">
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO t_table (room, x, y, status)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.room}, #{item.x}, #{item.y},#{item.status})
+        </foreach>
+    </insert>
+</mapper>

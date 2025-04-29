@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>租用记录</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/layui/layui.js"></script>
+    <script src="../lib/constant.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+    <style>
+        *{
+            font-family: "微软雅黑 ";
+        }
+    </style>
+</head>
+<body>
+<h1>租用记录</h1>
+
+<table id="demo" lay-filter="test"></table>
+
+</body>
+<script>
+    layui.use('table', function(){
+        table = layui.table;
+        //第一个实例
+        tableIns=table.render({
+            elem: '#demo'
+            ,width:2080
+            ,height: 700
+            ,url: '/order/orderList' //数据接口
+            ,page: true //开启分页
+            ,limit: 10
+            ,cols: [[ //表头
+                {field: 'id', title: '序号', fixed: 'left',width:100}
+                ,{field: "num", title: '租用编号',width:150}
+                ,{field: "room", title: '教室号',width:150}
+                ,{field: "tablenum", title: '桌号',width:150}
+                ,{field: "starttime", title: '开始时间', width:150}
+                ,{field: "endtime", title: '结束时间', width:150}
+                ,{field: "school", title: '所属学校',width:200}
+                , {field: "status", title: '当前状态', width:220, templet: function(d){
+                        if(d.status==0) return '<span class="layui-badge layui-bg-orange"><i class="layui-icon">&#xe63f;</i> 未签到</span>';
+                        if(d.status==1) return '<span class="layui-badge layui-bg-green"><i class="layui-icon">&#xe6b2;</i> 自习中</span>';
+                        if(d.status==2) return '<span class="layui-badge layui-bg-blue"><i class="layui-icon">&#xe702;</i> 已结束</span>';
+                        if(d.status==3) return '<span class="layui-badge layui-bg-black"><i class="layui-icon">&#xe640;</i> 已取消</span>';
+                        if(d.status==4) return '<span class="layui-badge layui-bg-red"><i class="layui-icon">&#xe60e;</i>缺席</span>';
+                    }}
+            ]]
+        });
+
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+    });
+</script>
+</html>

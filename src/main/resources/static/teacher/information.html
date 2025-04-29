@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>通知查看</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/layui/layui.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+</head>
+<body>
+<div class="layui-card">
+    <div class="layui-card-header layuiadmin-card-header-auto">
+        <div class="layui-form-item" style="margin-bottom: 0;">
+            <div class="layui-inline">
+                <h2>通知查看</h2>
+            </div>
+        </div>
+    </div>
+    <div class="layui-card-body">
+        <!-- 通知列表表格 -->
+        <table id="notice-table" lay-filter="notice-table"></table>
+    </div>
+</div>
+</body>
+
+<!-- 发布/编辑通知的表单模板 -->
+<script type="text/html" id="notice-form-tpl">
+    <form class="layui-form" lay-filter="notice-form" style="padding: 20px;">
+        <input type="hidden" name="id">
+        <div class="layui-form-item">
+            <label class="layui-form-label">通知标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" required lay-verify="required" placeholder="请输入通知标题" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">通知类型</label>
+            <div class="layui-input-block">
+                <select name="type" lay-verify="required">
+                    <option value="">请选择通知类型</option>
+                    <option value="1">系统通知</option>
+                    <option value="2">维护通知</option>
+                    <option value="3">活动通知</option>
+                    <option value="4">紧急通知</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">通知内容</label>
+            <div class="layui-input-block">
+                <textarea name="content" placeholder="请输入通知内容" class="layui-textarea" lay-verify="required"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">生效时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="starttime" id="starttime" readonly required lay-verify="required" placeholder="请选择生效时间" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">过期时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="endtime" id="endtime" readonly placeholder="请选择过期时间(可选)" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+</script>
+
+<script>
+    layui.use(['table', 'form', 'layer', 'laydate'], function(){
+        var table = layui.table;
+        var form = layui.form;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var $ = layui.$;
+
+        // 初始化日期选择器
+        function initDatePicker() {
+            // 生效时间选择器
+            laydate.render({
+                elem: '#starttime',
+                type: 'datetime',
+                trigger: 'click',
+                done: function(value, date){
+                    // 设置结束时间的最小值为选择的开始时间
+                    endTime.config.min = {
+                        year: date.year,
+                        month: date.month - 1,
+                        date: date.date,
+                        hours: date.hours,
+                        minutes: date.minutes,
+                        seconds: date.seconds
+                    };
+                }
+            });
+
+            // 过期时间选择器
+            var endTime = laydate.render({
+                elem: '#endtime',
+                type: 'datetime',
+                trigger: 'click'
+            });
+        }
+
+        // 初始化表格
+        var tableIns = table.render({
+            elem: '#notice-table',
+            url: '/notice/noticelist',
+            page: true,
+            limits: [10, 20, 30, 50],
+            limit: 10,
+            cols: [[
+                {field: 'id', title: 'ID', width: 80, sort: true},
+                {field: 'title', title: '标题', width: 200, templet: function(d){
+                        return '<a href="javascript:;" class="notice-title" lay-event="showDetail" style="color: #01AAED;">'+d.title+'</a>';
+                    }},
+                {field: 'type', title: '类型', width: 120, templet: function(d){
+                        var types = {'1': '系统通知', '2': '维护通知', '3': '活动通知', '4': '紧急通知'};
+                        return types[d.type] || '未知类型';
+                    }},
+                {field: 'content', title: '内容', width: 300},
+                {field: 'starttime', title: '生效时间', width: 180, sort: true},
+                {field: 'endtime', title: '过期时间', width: 180, sort: true},
+                {field: 'createtime', title: '创建时间', width: 180, sort: true},
+                {field: 'status', title: '状态', width: 100, templet: function(d){
+                        var now = new Date().getTime();
+                        var start = new Date(d.starttime).getTime();
+                        var end = d.endtime ? new Date(d.endtime).getTime() : null;
+                        if (now < start) return '<span class="layui-badge layui-bg-gray">未生效</span>';
+                        if (end && now > end) return '<span class="layui-badge">已过期</span>';
+                        return '<span class="layui-badge layui-bg-green">生效中</span>';
+                    }},
+            ]]
+        });
+        // 监听表格工具条
+        table.on('tool(notice-table)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'showDetail'){
+                // 显示通知详情弹窗
+                showNoticeDetail(data);
+            }
+        });
+        // 显示通知详情弹窗
+        function showNoticeDetail(data) {
+            var types = {'1': '系统通知', '2': '维护通知', '3': '活动通知', '4': '紧急通知'};
+            var typeName = types[data.type] || '未知类型';
+
+            var html = '<div style="padding: 20px;">' +
+                '<div><strong>标题：</strong>' + data.title + '</div>' +
+                '<div style="margin-top: 10px;"><strong>类型：</strong>' + typeName + '</div>' +
+                '<div style="margin-top: 10px;"><strong>内容：</strong><div style="margin-top: 5px; padding: 10px; background-color: #f2f2f2; border-radius: 2px;">' + data.content + '</div></div>' +
+                '<div style="margin-top: 10px;"><strong>生效时间：</strong>' + formatDateTime(data.starttime) + '</div>';
+
+            if(data.endtime) {
+                html += '<div style="margin-top: 10px;"><strong>过期时间：</strong>' + formatDateTime(data.endtime) + '</div>';
+            }
+
+            html += '<div style="margin-top: 10px;"><strong>创建时间：</strong>' + formatDateTime(data.createtime) + '</div>' +
+                '</div>';
+
+            layer.open({
+                type: 1,
+                title: '通知详情',
+                area: ['600px', 'auto'],
+                content: html
+            });
+        }
+        // 添加一个格式化日期时间的函数
+        function formatDateTime(datetimeStr) {
+            if (!datetimeStr) return '';
+            var datetime = new Date(datetimeStr);
+            var year = datetime.getFullYear();
+            var month = (datetime.getMonth() + 1).toString().padStart(2, '0');
+            var day = datetime.getDate().toString().padStart(2, '0');
+            var hours = datetime.getHours().toString().padStart(2, '0');
+            var minutes = datetime.getMinutes().toString().padStart(2, '0');
+            var seconds = datetime.getSeconds().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+        }
+    });
+</script>
+</html>

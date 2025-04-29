@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>签到</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/constant.js"></script>
+    <script src="../lib/layui/layui.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+    <link rel="stylesheet" href="../lib/layui/css/attendance.css" />
+    <!-- 在 attendance.html 的 head 部分添加 -->
+    <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
+    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
+</head>
+<body>
+<div class="top flex flex-align-end flex-pack-center flex-warp">
+    <!-- 添加签到按钮 -->
+    <div class="out-1 flex flex-align-center flex-pack-center" id="signIn">
+        <div class="out-2 flex flex-align-center flex-pack-center">
+            <div class="signBtn">
+                <strong id="signin-txt">签到</strong>
+                <span>共签到<em id="signin-count">0</em>次</span>
+            </div>
+        </div>
+    </div>
+    <div class="out-1 flex flex-align-center flex-pack-center">
+        <div class="out-2 flex flex-align-center flex-pack-center">
+            <div id="timer-display" class="timer-box" >
+                <strong id="elapsed-time">00:00:00</strong>
+            </div>
+        </div>
+    </div>
+    <div class="out-1 flex flex-align-center flex-pack-center" id="signOut">
+        <div class="out-2 flex flex-align-center flex-pack-center">
+            <div class="signBtn">
+                <strong id="signout-txt">签退</strong>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+    <div class="Calendar">
+        <div id="toyear" class="flex flex-pack-center">
+            <div id="idCalendarPre">&lt;</div>
+            <div class="year-month">
+                <span id="idCalendarYear">2025</span>年<span id="idCalendarMonth">5</span>月
+            </div>
+            <div id="idCalendarNext">&gt;</div>
+        </div>
+        <table border="1px" cellpadding="0" cellspacing="0">
+            <thead>
+            <tr class="tou">
+                <td>日</td>
+                <td>一</td>
+                <td>二</td>
+                <td>三</td>
+                <td>四</td>
+                <td>五</td>
+                <td>六</td>
+            </tr>
+            </thead>
+            <tbody id="idCalendar">
+            </tbody>
+        </table>
+    </div>
+</body>
+<script type="text/javascript" src="../lib/layui/attendance.js"></script>
+<script language="JavaScript">
+    var isSign = false;
+    var count = 0;
+    var myday = new Array(); //已签到的数组
+    var timer = null; // 计时器
+    var startTime = null; // 记录签到时间
+
+    // 计算时间差并格式化
+    function formatTimeDiff(start, end) {
+        var diff = end - start;
+        var hours = Math.floor(diff / 3600000);
+        var minutes = Math.floor((diff % 3600000) / 60000);
+        var seconds = Math.floor((diff % 60000) / 1000);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // 更新计时器显示
+    function updateTimerDisplay() {
+        if (startTime) {
+            var elapsedTime = formatTimeDiff(startTime, new Date().getTime());
+            document.getElementById("elapsed-time").innerText = elapsedTime;
+        }
+    }
+
+    // 从 localStorage 恢复状态
+    function restoreState() {
+        const storedStartTime = localStorage.getItem("startTime");
+        const storedIsSign = localStorage.getItem("isSign");
+
+        if (storedIsSign === "true") {
+            isSign = true;
+            startTime = parseInt(storedStartTime);
+            count = parseInt(localStorage.getItem("signinCount"));
+            $$("signin-count").innerHTML = count;
+            $$("signin-txt").innerHTML = '已签到';
+
+            // 启动计时器
+            timer = setInterval(updateTimerDisplay, 1000);
+        }
+    }
+
+    $(function () {
+        $.ajax({
+            type: 'get',
+            url: RequestURL + '/sign/signInfo',
+            success: function (result) {
+                if (result.code == 200){
+                    if (result.data.signined == 1){
+                        isSign = true;
+                        count = result.data.count;
+                        $$("signin-count").innerHTML = parseInt(count);
+                        $$("signin-txt").innerHTML = '已签到';
+                    }
+                } else if (result.code == 400) {
+                    layer.msg("还没签到过哦，快点签到吧!");
+                }
+            }
+        });
+    });
+
+    // 恢复页面时的状态
+    restoreState();
+
+    var cale = new Calendar("idCalendar", {
+        qdDay: myday,
+        onToday: function(o) {
+            o.className = "onToday";
+        },
+        onSignIn: function (){
+            $$("signin-txt").innerHTML = '已签到';
+        },
+        onFinish: function() {
+            $$("signin-count").innerHTML = myday.length //已签到次数
+            $$("idCalendarYear").innerHTML = this.Year;
+            $$("idCalendarMonth").innerHTML = this.Month; //表头年份
+        }
+    });
+
+    $$("idCalendarPre").onclick = function() {
+        cale.PreMonth();
+    };
+    $$("idCalendarNext").onclick = function() {
+        cale.NextMonth();
+    };
+
+    // 签到按钮点击事件
+    $$("signIn").onclick = function() {
+        if (!isSign) {
+            // 先加载 layer 模块
+            layui.use('layer', function(){
+                var layer = layui.layer;
+
+                // 1. 先获取签到的扣分详情（预览）
+                $.ajax({
+                    type: 'get',
+                    url: RequestURL + '/sign/signin',
+                    data: {
+                        action: 'preview' // 表示预览请求
+                    },
+                    success: function(result) {
+                        if (result.code == 200) {
+                            // 2. 显示扣分详情，并让用户确认
+                            var detailMsg = result.data.detail || "确定要签到吗？";
+
+                            layer.confirm(detailMsg, {
+                                title: '签到确认',
+                                btn: ['确定签到', '我再想想'],
+                                yes: function(index) {
+                                    // 3. 用户确认后，执行实际签到
+                                    $.ajax({
+                                        type: 'get',
+                                        url: RequestURL + '/sign/signin',
+                                        success: function(result) {
+                                            if (result.code == 200) {
+                                                // 后端成功后才执行 cale.SignIn 进行前端标记
+                                                var res = cale.SignIn();
+                                                if (res == '1') {
+                                                    $$("signin-txt").innerHTML = '已签到';
+                                                    count = result.data.count;
+                                                    $$("signin-count").innerHTML = parseInt(count);
+                                                    isSign = true;
+                                                    startTime = new Date().getTime();
+                                                    timer = setInterval(updateTimerDisplay, 1000);
+
+                                                    localStorage.setItem("startTime", startTime);
+                                                    localStorage.setItem("isSign", "true");
+                                                    localStorage.setItem("signinCount", count);
+
+                                                    layer.layer.msg("签到成功！签到时间：" + result.data.signinTime);
+                                                } else if (res == '2') {
+                                                    layer.msg('已经签到了，先签退');
+                                                }
+                                            } else {
+                                                layer.msg(result.msg || "签到失败：" + (result.data || "未知错误"));
+                                            }
+                                        },
+                                        error: function(xhr, status, error) {
+                                            layer.msg("请求失败: " + (xhr.responseJSON?.msg || error));
+                                        }
+                                    });
+                                    layer.close(index);
+                                }
+                            });
+                        } else {
+                            layer.msg(result.msg || "获取签到信息失败");
+                        }
+                    },
+                    error: function() {
+                        layer.msg("获取签到信息失败");
+                    }
+                });
+            });
+        } else {
+            layui.use('layer', function(){
+                var layer = layui.layer;
+                layer.msg('已经签到了，先签退');
+            });
+        }
+    };
+
+
+    // 签退按钮点击事件
+    $$("signOut").onclick = function() {
+        // 先加载 layer 模块
+        layui.use('layer', function(){
+            var layer = layui.layer;
+
+            // 1. 先获取签退的扣分详情（预览）
+            $.ajax({
+                type: 'get',
+                url: RequestURL + '/sign/signout',
+                data: {
+                    action: 'preview' // 表示预览请求
+                },
+                success: function(result) {
+                    if (result.code == 200) {
+                        // 2. 显示扣分详情，并让用户确认
+                        var detailMsg = result.data.detail || "确定要签退吗？";
+
+                        layer.confirm(detailMsg, {
+                            title: '签退确认',
+                            btn: ['确定签退', '我再想想'],
+                            yes: function(index) {
+                                // 3. 用户确认后，执行实际签退
+                                $.ajax({
+                                    type: 'get',
+                                    url: RequestURL + '/sign/signout',
+                                    success: function(result) {
+                                        // 处理成功响应(200)
+                                        if (result.code == 200) {
+                                            $$("signout-txt").innerHTML = '已签退';
+                                            $$("signin-txt").innerHTML = '签到'; // 重置签到按钮状态
+                                            isSign = false;
+
+                                            // 计算并显示签到时长
+                                            if (startTime) {
+                                                var duration = formatTimeDiff(startTime, new Date().getTime());
+                                                layer.layer.msg("签退成功！本次签到时长：" + duration + "\n签退时间：" + result.data.signoutTime);
+                                            }
+
+                                            // 清除计时器
+                                            clearInterval(timer);
+                                            startTime = null;
+                                            document.getElementById("elapsed-time").innerText = "00:00:00";
+
+                                            // 清除 localStorage
+                                            localStorage.removeItem("startTime");
+                                            localStorage.removeItem("isSign");
+                                            localStorage.removeItem("signinCount");
+                                        }
+                                        // 处理已签退情况(201)
+                                        else if (result.code == 201) {
+                                            layer.msg(result.msg);
+                                        }
+                                        // 处理其他错误情况
+                                        else {
+                                            layer.msg(result.msg || "签退失败：" + (result.data || "未知错误"));
+                                        }
+                                    },
+                                    error: function(xhr, status, error) {
+                                        layer.msg("请求失败: " + (xhr.responseJSON?.msg || error));
+                                    }
+                                });
+                                layer.close(index);
+                            }
+                        });
+                    } else {
+                        layer.msg(result.msg || "获取签退信息失败");
+                    }
+                },
+                error: function() {
+                    layer.msg("获取签退信息失败");
+                }
+            });
+        });
+    };
+</script>
+
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>积分管理</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/layui/layui.js"></script>
+    <script src="../lib/constant.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+    <style>
+        *{
+            font-family: "微软雅黑";
+        }
+    </style>
+</head>
+<body>
+<h1>积分管理</h1>
+
+<table id="demo" lay-filter="test"></table>
+
+<!-- 编辑积分弹出层 -->
+<script type="text/html" id="editPoints">
+    <div class="layui-form" style="padding: 20px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户编号</label>
+            <div class="layui-input-block">
+                <input type="text" id="editId" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户名</label>
+            <div class="layui-input-block">
+                <input type="text" id="editUsername" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">当前积分</label>
+            <div class="layui-input-block">
+                <input type="text" id="currentPoints" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新积分</label>
+            <div class="layui-input-block">
+                <input type="number" id="newPoints" class="layui-input" lay-verify="required|number" placeholder="请输入新的积分值">
+            </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    layui.use(['table', 'form', 'layer'], function(){
+        var table = layui.table;
+        var form = layui.form;
+        var layer = layui.layer;
+
+        //第一个实例
+        tableIns = table.render({
+            elem: '#demo',
+            width: 1050,
+            height: 700,
+            url: '/admin/userlist', //数据接口
+            page: true, //开启分页
+            limit: 10,
+            cols: [[ //表头
+                {field: 'id', title: '用户编号', fixed: 'left', width:150},
+                {field: "username", title: '用户名', width:150},
+                {field: "phone", title: '手机号', width:150},
+                {field: "email", title: '邮箱', width:150},
+                {field: "points", title: '积分', width:150},
+                {field: "school", title: '所属学校', width:400},
+                {fixed: 'right', title: '操作', width:150, align:'center', toolbar: '#barDemo'}
+            ]],
+            toolbar: '#toolbarDemo'
+        });
+
+        // 操作列模板
+        var editScript = '<script type="text/html" id="barDemo">';
+        editScript += '<a class="layui-btn layui-btn-xs" lay-event="edit">编辑积分</a>';
+        editScript += '<\/script>';
+        $('body').append(editScript);
+
+        // 监听工具条
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                // 弹出编辑层
+                layer.open({
+                    type: 1,
+                    title: '编辑用户积分 - '+data.username,
+                    area: ['500px', '400px'],
+                    content: $('#editPoints').html(),
+                    success: function(layero, index){
+                        // 填充数据
+                        $('#editId').val(data.id);
+                        $('#editUsername').val(data.username);
+                        $('#currentPoints').val(data.points);
+                        $('#newPoints').val(data.points);
+                    },
+                    btn: ['确定', '取消'],
+                    yes: function(index, layero){
+                        var newPoints = $('#newPoints').val();
+                        if(!newPoints || isNaN(newPoints)){
+                            layer.msg('请输入有效的积分值');
+                            return;
+                        }
+                        // 这里发送AJAX请求更新积分
+                        $.ajax({
+                            url: '/admin/updatePoint',
+                            type: 'POST',
+                            data: {
+                                Username: data.username,
+                                points: newPoints
+                            },
+                            success: function(res){
+                                if(res.code === 0){
+                                    layer.msg('积分更新成功');
+                                    layer.close(index);
+                                    // 刷新表格
+                                    tableIns.reload();
+                                }else{
+                                    layer.msg(res.msg || '积分更新失败');
+                                }
+                            },
+                            error: function(){
+                                layer.msg('请求失败，请稍后再试');
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

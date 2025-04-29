@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>预约</title>
+    <script src="../lib/jquery-3.4.1.js"></script>
+    <script src="../lib/constant.js"></script>
+    <script src="../lib/layui/layui.all.js"></script>
+    <link rel="stylesheet" href="../lib/layui/css/layui.css">
+    <style>
+        .seat-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .seat-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .seat-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .seat-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .available {
+            background-color: #5FB878;
+            color: white;
+        }
+        .unavailable {
+            background-color: #FF5722;
+            color: white;
+        }
+        .seat-label {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+    <legend>教室查询</legend>
+</fieldset>
+<table id="roomTable" lay-filter="roomTableFilter"></table>
+<!--查询-->
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+    <legend>自习室座位查询</legend>
+</fieldset>
+
+<div class="layui-form-item">
+    <label class="layui-form-label">选择教室</label>
+    <div class="layui-input-inline">
+        <select id="roomSelect" class="layui-select">
+            <option value="">请选择教室</option>
+        </select>
+    </div>
+</div>
+
+<!-- 座位展示区域 -->
+<div class="seat-container">
+    <div class="seat-label" >请选择教室查看座位</div>
+    <div class="seat-grid" id="seatGrid"></div>
+</div>
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+    <legend>座位预约——只可预约48小时内座位</legend>
+</fieldset>
+
+<form class="layui-form layui-form-pane" action="">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">日期选择</label>
+            <div class="layui-input-block">
+                <input type="text" name="date" id="date1" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="start" placeholder="请选择开始时间">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">结束时间</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="end" placeholder="请选择结束时间">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">预约教室</label>
+        <div class="layui-input-inline">
+            <input type="text" name="quiz1" id="quiz1" placeholder="请输入教室号" autocomplete="off" class="layui-input" readonly>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选择桌号</label>
+        <div class="layui-input-inline">
+            <input type="text" name="quiz2" id="quiz2" placeholder="请输入桌子排数" autocomplete="off" class="layui-input" readonly>
+        </div>
+        <div class="layui-input-inline">
+            <input type="text" name="quiz3" id="quiz3" placeholder="请输入桌子列数" autocomplete="off" class="layui-input" readonly>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <button id="button" class="layui-btn" lay-submit="" lay-filter="demo1">预定</button>
+    </div>
+    <div class="layui-form">
+        <table id="demo" class="layui-table" lay-filter="test"></table>
+    </div>
+</form>
+<!--座位预约-->
+<script>
+    layui.use(['form', 'laydate', 'table'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            laydate = layui.laydate,
+            table = layui.table;
+
+        // 渲染日期和时间选择器
+        laydate.render({ elem: '#date1' });
+        laydate.render({ elem: '#start', type: 'time', format: 'H点m分' });
+        laydate.render({ elem: '#end', type: 'time', format: 'H点m分' });
+
+        // 加载教室下拉框
+        $.ajax({
+            url: '/room/roomlist',
+            method: 'get',
+            success: function (res) {
+                if (res.code === 0) {
+                    var roomList = res.data;
+                    var html = '<option value="">请选择教室</option>';
+                    roomList.forEach(function (room) {
+                        html += '<option value="' + room.num + '">' + room.num + '</option>';
+                    });
+                    $('#roomSelect').html(html);
+                    form.render('select');
+                } else {
+                    layer.msg("加载教室失败: " + res.msg);
+                }
+            },
+            error: function () {
+                layer.msg("加载教室请求失败");
+            }
+        });
+
+        // 教室切换后加载对应座位
+        $('#roomSelect').on('change', function () {
+            var roomId = $(this).val();
+            if (roomId) {
+                $('.seat-label').text('教室 ' + roomId + ' 的座位分布').css('text-align', 'left');;
+                $.ajax({
+                    url: '/table/gettables/' + roomId,
+                    method: 'get',
+                    success: function (response) {
+                        if (response.msg === "操作成功") {
+                            renderSeatGrid(response.data, roomId);
+                        } else {
+                            layer.msg("获取座位失败: " + response.msg);
+                            $('#seatGrid').html('');
+                        }
+                    },
+                    error: function () {
+                        layer.msg("获取座位请求失败");
+                        $('#seatGrid').html('');
+                    }
+                });
+            } else {
+                $('.seat-label').text('请选择教室查看座位');
+                $('#seatGrid').html('');
+            }
+        });
+
+        // 渲染渲染座位网格函数
+        function renderSeatGrid(seatData, roomId) {
+            $('#seatGrid').html('');
+
+            // 按x(排)和y(列)排序
+            seatData.sort((a, b) => {
+                if (a.x !== b.x) return a.x - b.x; // 先按排数排序
+                return a.y - b.y; // 同排按列数排序
+            });
+
+            // 找出最大的x和y值来确定网格大小
+            let maxX = 0, maxY = 0;
+            seatData.forEach(seat => {
+                if (seat.x > maxX) maxX = seat.x;
+                if (seat.y > maxY) maxY = seat.y;
+            });
+
+            // 创建网格容器，设置宽度基于列数
+            const gridContainer = $('<div>').css({
+                display: 'grid',
+                'grid-template-columns': `repeat(${maxY}, 50px)`,
+                gap: '10px'
+            });
+
+            // 填充座位
+            seatData.forEach(seat => {
+                const seatElement = $(`
+            <div class="seat-item ${seat.status === 1 ? 'available' : 'unavailable'}"
+                 data-room="${roomId}"
+                 data-x="${seat.x}"
+                 data-y="${seat.y}"
+                 style="grid-row: ${seat.x}; grid-column: ${seat.y}">
+                ${seat.x}-${seat.y}
+            </div>
+        `);
+
+                // 单击事件 - 填充表单
+                seatElement.on('click', function() {
+                    $('#quiz1').val(roomId);
+                    $('#quiz2').val(seat.x);
+                    $('#quiz3').val(seat.y);
+                });
+
+                // 双击事件 - 查看预约
+                seatElement.on('dblclick', function() {
+                    viewTodayOrders(roomId, seat.x, seat.y);
+                });
+
+                gridContainer.append(seatElement);
+            });
+
+            $('#seatGrid').append(gridContainer);
+        }
+
+        // 查看当天预约情况
+        function viewTodayOrders(room, x, y) {
+            layer.open({
+                type: 1,
+                title: '座位 (' + x + ',' + y + ') 今日明日预约记录 - 教室 ' + room,
+                area: ['800px', '500px'],
+                content: '<table id="todayOrdersTable" class="layui-table" lay-filter="todayOrdersFilter"></table>',
+                success: function () {
+                    layui.use('table', function(){
+                        var table = layui.table;
+                        $.ajax({
+                            url: '/order/getTodayOrdersBySeat',
+                            type: 'get',
+                            data: { room: room, x: x, y: y },
+                            success: function(res) {
+                                if (res.code === 0) {
+                                    table.render({
+                                        elem: '#todayOrdersTable',
+                                        data: res.data,
+                                        page: false,
+                                        cols: [[
+                                            {field: 'date', title: '日期', width: 150, sort: true},
+                                            {field: 'starttime', title: '开始时间', width: 150, sort: true},
+                                            {field: 'endtime', title: '结束时间', width: 150, sort: true},
+                                            {field: "status", title: '当前状态', width:220, templet: function(d){
+                                                    if(d.status==0) return '<span class="layui-badge layui-bg-orange"><i class="layui-icon">&#xe63f;</i> 未签到</span>';
+                                                    if(d.status==1) return '<span class="layui-badge layui-bg-green"><i class="layui-icon">&#xe6b2;</i> 自习中</span>';
+                                                    if(d.status==2) return '<span class="layui-badge layui-bg-blue"><i class="layui-icon">&#xe702;</i> 已结束</span>';
+                                                    if(d.status==3) return '<span class="layui-badge layui-bg-black"><i class="layui-icon">&#xe640;</i> 已取消</span>';
+                                                    if(d.status==4) return '<span class="layui-badge layui-bg-red"><i class="layui-icon">&#xe60e;</i>缺席</span>';
+                                                }}
+                                        ]],
+                                        done: function(res, curr, count) {
+                                            if(count === 0) {
+                                                $('#todayOrdersTable').html('<div class="layui-none">今天该座位暂无预约记录</div>');
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    layer.msg("获取预约记录失败：" + res.msg);
+                                    layer.closeAll();
+                                }
+                            },
+                            error: function() {
+                                layer.msg("请求失败，请稍后再试");
+                                layer.closeAll();
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        // 预定按钮点击事件
+        $("#button").click(function (e) {
+            e.preventDefault();
+            let date = $("#date1").val().trim();
+            let starttime = $("#start").val().trim();
+            let endtime = $("#end").val().trim();
+            let room = $("#quiz1").val().trim();
+            let x = $("#quiz2").val().trim();
+            let y = $("#quiz3").val().trim();
+            if (!date || !starttime || !endtime || !room || !x || !y) {
+                layer.msg("请填写所有信息");
+                return false;
+            }
+
+            $.ajax({
+                type: 'post',
+                url: RequestURL + '/order/makeorder',
+                data: {
+                    "date": date,
+                    "starttime": starttime,
+                    "endtime": endtime,
+                    "room": room,
+                    "x": x,
+                    "y": y
+                },
+                success: function (data) {
+                    if(data.code === 0) {
+                        layer.msg(data.msg);
+                        // 刷新预约记录表格
+                        table.reload('demo');
+                    } else {
+                        layer.msg(data.msg);
+                    }
+                },
+                error: function() {
+                    layer.msg("请求失败，请稍后再试");
+                }
+            });
+            return false;
+        });
+
+        // 渲染预约记录表格
+        table.render({
+            elem: '#demo',
+            width: 1150,
+            height: 700,
+            url: '/order/getOrders',
+            page: true,
+            limit: 10,
+            cols: [[
+                {field: 'num', title: '租用号', fixed: 'left', width:150},
+                {field: "date", title: '租用日期', width:200},
+                {field: "room", title: '教室号', width:100},
+                {field: "tablenum", title: '桌号', width:100},
+                {field: "starttime", title: '开始时间',sort:true, width:150},
+                {field: "endtime", title: '结束时间', width:150},
+                {field: "status", title: '当前状态', width:150, sort:true,templet: function(d){
+                        if(d.status==0) return '<span class="layui-badge layui-bg-orange"><i class="layui-icon">&#xe63f;</i> 未签到</span>';
+                        if(d.status==1) return '<span class="layui-badge layui-bg-green"><i class="layui-icon">&#xe6b2;</i> 自习中</span>';
+                        if(d.status==2) return '<span class="layui-badge layui-bg-blue"><i class="layui-icon">&#xe702;</i> 已结束</span>';
+                        if(d.status==3) return '<span class="layui-badge layui-bg-black"><i class="layui-icon">&#xe640;</i> 已取消</span>';
+                        if(d.status==4) return '<span class="layui-badge layui-bg-red"><i class="layui-icon">&#xe60e;</i>缺席</span>';
+                    }},
+                {field: "rightright",title:'操作' ,width: 150,align:'center', toolbar:'#barDemo' }
+            ]]
+        });
+        // 监听表格工具条事件
+        table.on('tool(test)', function(obj) {
+            var data = obj.data; // 当前行数据
+            var layEvent = obj.event; // 事件类型
+
+            if (layEvent === 'Cancel') {
+                // 1. 先获取取消的扣分详情（预览）
+                $.ajax({
+                    url: '/order/Cancel',
+                    type: 'POST',
+                    data: {
+                        num: data.num,
+                        action: 'preview' // 表示预览请求
+                    },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            // 2. 显示扣分详情，并让用户确认
+                            var detailMsg = res.data.detail || "确定要取消此预约吗？";
+
+                            layer.confirm(detailMsg, {
+                                title: '取消预约确认',
+                                btn: ['确定取消', '我再想想']
+                            }, function(index) {
+                                // 3. 用户确认后，执行实际取消
+                                $.ajax({
+                                    url: '/order/Cancel',
+                                    type: 'POST',
+                                    data: {
+                                        num: data.num
+                                    },
+                                    success: function(res) {
+                                        if (res.code === 200) {
+                                            layer.msg('取消成功', { icon: 1 });
+                                            table.reload('demo'); // 刷新表格
+                                        } else {
+                                            layer.msg(res.msg, { icon: 2 });
+                                        }
+                                    },
+                                    error: function() {
+                                        layer.msg('取消失败，请稍后再试', { icon: 2 });
+                                    }
+                                });
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.msg(res.msg, { icon: 2 });
+                        }
+                    },
+                    error: function() {
+                        layer.msg('获取取消信息失败', { icon: 2 });
+                    }
+                });
+            }
+        });
+    });
+</script>
+<!--教室查询-->
+<script>
+    layui.use(['table', 'layer'], function(){
+        var table = layui.table,
+            layer = layui.layer;
+
+        // 渲染教室表格
+        table.render({
+            id: 'roomTable',
+            elem: '#roomTable',
+            url: '/room/roomlist',
+            page: true,
+            limit: 10,
+            even: true,
+            loading: true,
+            cols: [[
+                {field: 'num', title: '教室编号', width: 150, fixed: 'left', sort: true},
+                {field: 'school', title: '所属学校', width: 150, sort: true},
+                {field: 'capacity', title: '教室容量(人)', width: 150, sort: true},
+                {field: 'status', title: '当前时段', width: 200, sort: true,
+                    templet: function (d) {
+                        return d.status === 1 ?
+                            "<span class='layui-badge layui-bg-green'>可预约</span>" :
+                            "<span class='layui-badge layui-bg-red'>不可预约</span>";
+                    }
+                },
+                {fixed: 'right', title: '操作', toolbar: '#roomToolbar', width: 200}
+            ]],
+            done: function(res, curr, count){
+                if(count === 0){
+                    $('.layui-table-body').html('<div class="layui-none">暂无教室数据</div>');
+                }
+            }
+        });
+        // 设置定时器每分钟刷新一次表格
+        setInterval(function() {
+            table.reload('roomTable');
+        }, 30000);
+
+        // 工具条事件
+        table.on('tool(roomTableFilter)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'viewCourses'){
+                layer.open({
+                    type: 1,
+                    title: '教室 ' + data.num + ' 今日课程安排',
+                    area: ['800px', '500px'],
+                    content: '<table id="todayCourseTable" class="layui-table" lay-filter="todayCourseFilter"></table>',
+                    success: function () {
+                        table.render({
+                            elem: '#todayCourseTable',
+                            url: '/course/courselistByroomtoday?num=' + data.num,
+                            page: false,
+                            loading: true,
+                            cols: [[
+                                {field: 'date', title: '日期', width: 150, sort: true},
+                                {field: 'coursename', title: '课程名', width: 120, sort: true},
+                                {field: 'room', title: '教室号', width: 100, sort: true},
+                                {field: 'starttime', title: '开始时间', width: 150, sort: true},
+                                {field: 'endtime', title: '结束时间', width: 150, sort: true},
+                                {field: 'announcement', title: '公告', width: 120, sort: true}
+                            ]],
+                            done: function(res, curr, count){
+                                if(count === 0){
+                                    $('#todayCourseTable').html('<div class="layui-none">今日该教室暂无课程安排</div>');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+<!--教室查询-->
+<script type="text/html" id="roomToolbar">
+    <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="viewCourses">查看课程</a>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="Cancel">取消预约</a>
+</script>
+</body>
+</html>
