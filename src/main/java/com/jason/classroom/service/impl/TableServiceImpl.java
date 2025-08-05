@@ -132,9 +132,5 @@ public class TableServiceImpl extends ServiceImpl<TableMapper, Table> implements
         }
     }
 
-
-    public TableMapper getTableMapper() {
-        return tableMapper;
-    }
 }
 
