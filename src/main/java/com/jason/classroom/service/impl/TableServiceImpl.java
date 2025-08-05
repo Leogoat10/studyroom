@@ -5,7 +5,6 @@ import com.jason.classroom.common.lang.Result;
 import com.jason.classroom.common.vo.TableVO;
 import com.jason.classroom.entity.Room;
 import com.jason.classroom.entity.Table;
-import com.jason.classroom.entity.User;
 import com.jason.classroom.mapper.RoomMapper;
 import com.jason.classroom.mapper.TableMapper;
 import com.jason.classroom.service.TableService;
@@ -131,6 +130,11 @@ public class TableServiceImpl extends ServiceImpl<TableMapper, Table> implements
             log.error("更新座位状态出错", e);
             return Result.fail("更新座位状态时发生错误: " + e.getMessage());
         }
+    }
+
+
+    public TableMapper getTableMapper() {
+        return tableMapper;
     }
 }
 

@@ -16,7 +16,8 @@ import java.time.format.DateTimeFormatter;
  * <p>
  *  前端控制器
  * </p>
- */@RestController
+ */
+@RestController
 @RequestMapping("/table")
 @Api(tags = {"座位接口"})
 public class TableController {
