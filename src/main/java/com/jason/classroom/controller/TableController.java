@@ -4,13 +4,10 @@ package com.jason.classroom.controller;
 import com.jason.classroom.common.lang.Result;
 import com.jason.classroom.common.vo.TableVO;
 import com.jason.classroom.entity.Table;
-import com.jason.classroom.mapper.TableMapper;
 import com.jason.classroom.service.TableService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -67,7 +64,7 @@ public class TableController {
         return tableService.getAbleTable(tablenum);
     }
 
-    /*
+    /**
     * 更新座位状态
     * */
     @PostMapping("/update")
