@@ -2,11 +2,10 @@ package com.jason.classroom.controller;
 
 
 import com.jason.classroom.common.lang.Result;
-import com.jason.classroom.common.vo.CourseVO;
 import com.jason.classroom.common.vo.OrderVO;
-import com.jason.classroom.common.vo.TableVO;
 import com.jason.classroom.service.OrderService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +30,7 @@ public class OrderController {
      * @return 返回指定用户的预约记录列表
      */
     @GetMapping("/getOrders")
+    @ApiOperation(value = "根据用户名获取预约记录接口")
     public Map<String, Object> getOrdersByUsername(HttpServletRequest request) {
         // 调用orderService获取当前用户的预约记录
         return orderService.getOrdersByUsername(request);
@@ -43,6 +43,7 @@ public class OrderController {
      * @return 返回预约的结果
      */
     @PostMapping("/makeorder")
+    @ApiOperation(value = "创建预约接口")
     public Result makeOrder(OrderVO orderVO,  HttpServletRequest request) {
         // 调用orderService处理创建预约的逻辑
         return orderService.makeOrder(orderVO,request);
@@ -51,6 +52,7 @@ public class OrderController {
     * 取消预约接口
     * */
     @PostMapping("/Cancel")
+    @ApiOperation(value = "取消预约接口")
     public Result CancelOrder(OrderVO orderVO, HttpServletRequest request) {
         return orderService.cancelOrder(orderVO,request);
     }
@@ -59,6 +61,7 @@ public class OrderController {
      * @return 返回所有预约记录的列表
      */
     @GetMapping("/orderList")
+    @ApiOperation(value = "获取所有预约记录")
     public Map<String, Object> orderList() {
         // 调用orderService获取所有预约记录
         return orderService.orderList();
@@ -68,6 +71,7 @@ public class OrderController {
      * 根据教室和座位获取当天预约记录
      */
     @GetMapping("/getTodayOrdersBySeat")
+    @ApiOperation(value = "获取教室和座位的当天预约记录")
     public Map<String, Object> getTodayOrdersBySeat(
             @RequestParam String room,
             @RequestParam int x,

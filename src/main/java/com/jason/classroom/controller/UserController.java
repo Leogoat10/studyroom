@@ -1,16 +1,12 @@
 package com.jason.classroom.controller;
 
 
-import cn.hutool.core.lang.Assert;
+
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.crypto.SecureUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jason.classroom.common.dto.LoginDTO;
 import com.jason.classroom.common.lang.Result;
-import com.jason.classroom.entity.Admin;
 import com.jason.classroom.entity.User;
 import com.jason.classroom.service.UserService;
-import com.jason.classroom.util.JwtUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -114,6 +110,7 @@ public class UserController {
      * @return 返回用户对象，包含用户的基本信息
      */
     @GetMapping("/userinfo")
+    @ApiOperation(value = "获取用户信息接口")
     public User getUserInfo(HttpServletRequest request){
         return userService.userinfo(request);
     }
@@ -125,6 +122,7 @@ public class UserController {
      * @return 返回修改结果
      */
     @PostMapping("chuserInfo")
+    @ApiOperation(value = "修改用户信息接口")
     public Result chUserInfo(User user){
         return userService.chUserInfo(user);
     }
@@ -136,6 +134,7 @@ public class UserController {
      * @return 返回当前登录用户的基本信息
      */
     @GetMapping("/getusername")
+    @ApiOperation(value ="获取用户名用")
     public Object getUserName(HttpServletRequest request){
         Object user = request.getSession().getAttribute("user");
         return user;

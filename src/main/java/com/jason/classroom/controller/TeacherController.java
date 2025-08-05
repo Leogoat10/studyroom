@@ -2,11 +2,9 @@ package com.jason.classroom.controller;
 
 
 import cn.hutool.core.map.MapUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jason.classroom.common.dto.LoginDTO;
 import com.jason.classroom.common.lang.Result;
 import com.jason.classroom.entity.Teacher;
-import com.jason.classroom.entity.User;
 import com.jason.classroom.service.TeacherService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -33,8 +31,6 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
-    @Autowired
-    private UserController userController;
 
     /**
      * 教师登录接口
@@ -90,6 +86,7 @@ public class TeacherController {
      */
     @RequiresAuthentication
     @GetMapping("/logout")
+    @ApiOperation(value = "教师注销接口")
     public Result logout(){
         SecurityUtils.getSubject().logout();  // 注销当前会话
         return Result.succ(null);
@@ -101,6 +98,7 @@ public class TeacherController {
      * @return 返回教师对象，包含教师的基本信息
      */
     @GetMapping("/teacherInfo")
+    @ApiOperation(value = "获取教师信息接口")
     public Teacher getTeacherInfo(HttpServletRequest request){
         Teacher teacher = teacherService.teacherInfo(request);
         return teacher;
@@ -113,6 +111,7 @@ public class TeacherController {
      * @return 返回修改结果
      */
     @PostMapping("/chTeacherInfo")
+    @ApiOperation(value = "修改教师信息接口")
     public Result chInfo(Teacher teacher){
         return teacherService.chInfo(teacher);
     }
@@ -124,7 +123,7 @@ public class TeacherController {
      * @return 返回当前登录教师的基本信息
      */
     @GetMapping("/getteachername")
-    @ApiOperation(value = "获取教师姓名")
+    @ApiOperation(value = "获取教师姓名接口")
     public Object getUserName(HttpServletRequest request){
         Object teacher = request.getSession().getAttribute("teacher");
         return teacher;

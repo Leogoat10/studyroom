@@ -3,8 +3,8 @@ package com.jason.classroom.controller;
 
 import com.jason.classroom.common.lang.Result;
 import com.jason.classroom.service.SignService;
-import com.jason.classroom.service.UserService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +30,7 @@ public class SignController {
      * @return 返回签到结果
      */
     @GetMapping("/signin")
+    @ApiOperation(value = "用户签到接口")
     public Result signIn(HttpServletRequest request){
         return signService.signIn(request);
     }
@@ -40,6 +41,7 @@ public class SignController {
      * @return 返回签退结果
      */
     @GetMapping("/signout")
+    @ApiOperation(value = "用户签退接口")
     public Result signOut(HttpServletRequest request){
         return signService.signOut(request);
     }
@@ -51,6 +53,7 @@ public class SignController {
      * @return 返回用户签到统计信息
      */
     @GetMapping("/signInfo")
+    @ApiOperation(value = "获取用户签到信息接口")
     public Result signInfo(HttpServletRequest request){
         return signService.signCount(request);
     }

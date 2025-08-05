@@ -5,6 +5,7 @@ import com.jason.classroom.common.lang.Result;
 import com.jason.classroom.common.vo.CourseVO;
 import com.jason.classroom.service.CourseService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +31,16 @@ public class CourseController {
      * @return 返回课程列表的Map对象
      */
     @GetMapping("/courselist")
+    @ApiOperation(value = "获取课程列表接口")
     public Map<String, Object> getCourseList(HttpServletRequest request) {
         // 调用courseService获取课程列表
         return courseService.getCourseList(request);
     }
-    /*
+    /**
     * 根据教室编号获取当天课程信息
     * */
     @GetMapping("/courselistByroomtoday")
+    @ApiOperation(value = "根据教室编号获取当天课程信息")
     public Map<String, Object> getCourseListByRoomToday(@RequestParam String num) {
         return courseService.getCourseListByRoomToday(num);
     }
@@ -49,6 +52,7 @@ public class CourseController {
      * @return 返回课程启动的结果
      */
     @PostMapping("/startCourse")
+    @ApiOperation(value = "开始课程接口")
     public Result startCourse(CourseVO courseVO, HttpServletRequest request) {
         // 调用courseService处理启动课程的逻辑
         return courseService.startCourse(courseVO, request);

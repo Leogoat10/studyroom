@@ -6,6 +6,7 @@ import com.jason.classroom.common.vo.TableVO;
 import com.jason.classroom.entity.Table;
 import com.jason.classroom.service.TableService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ public class TableController {
      * @return 返回指定自习室中所有座位的相关信息
      */
     @GetMapping("/gettables/{room}")
+    @ApiOperation(value = "查询指定自习室中的所有座位接口")
     public Result table4List(@PathVariable(name = "room") String room){
         return tableService.table4List(room);
     }
@@ -38,6 +40,7 @@ public class TableController {
      * @return 返回座位预定操作的结果
      */
     @PostMapping("/ordertable")
+    @ApiOperation(value = "订座位接口")
     public Result orderTable(TableVO tableVO){
         Table table = new Table();
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -60,6 +63,7 @@ public class TableController {
      * @return 返回可用座位的信息
      */
     @GetMapping("/getabletable")
+    @ApiOperation(value = "获取可用的座位接口")
     public Result getAbleTable(String tablenum){
         return tableService.getAbleTable(tablenum);
     }
@@ -68,6 +72,7 @@ public class TableController {
     * 更新座位状态
     * */
     @PostMapping("/update")
+    @ApiOperation(value = "更新座位状态接口")
     public Result updateTable(TableVO tableVO) {
         return tableService.updateTable(tableVO);
     }

@@ -12,7 +12,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -182,6 +181,7 @@ public class AdminController {
     }
 
     @PostMapping("/updatePoint")
+    @ApiOperation(value = "更新用户积分")
     public Result updatePoints(@RequestParam("Username") String Username,
                                @RequestParam("points") int points) {
         return adminService.updatePoints(Username,points);

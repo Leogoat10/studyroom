@@ -16,5 +16,10 @@
       <option name="name" value="Central Repository" />
       <option name="url" value="https://maven.aliyun.com/repository/public" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="aosom-maven" />
+      <option name="name" value="aosom-maven" />
+      <option name="url" value="https://it-nexus.aosom.com/repository/maven-public/" />
+    </remote-repository>
   </component>
 </project>

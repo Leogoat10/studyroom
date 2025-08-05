@@ -43,6 +43,7 @@ public class RoomController {
      * @return 返回包含所有自习室的结果
      */
     @GetMapping("/getRoomsBySchool")
+    @ApiOperation(value = "获取同一学校中的所有自习室")
     public Result getRoomsBySchool(HttpServletRequest request){
         return roomService.getRoomsBySchool(request);
     }
@@ -55,6 +56,7 @@ public class RoomController {
      */
     @RequiresAuthentication
     @GetMapping("/getRoomsByStatus/{status}")
+    @ApiOperation(value = "根据状态获取可用或不可用的自习室接口")
     public Result getRoomsByStatus(@PathVariable(name = "status") Integer status){
         return roomService.getRoomsByStatus(status);
     }
@@ -66,6 +68,7 @@ public class RoomController {
      */
     @RequiresAuthentication
     @PostMapping("/Occupy")
+    @ApiOperation(value = "占用自习室接口")
     public Result Occupy(RoomVO roomVO){
         Room room = new Room();
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
