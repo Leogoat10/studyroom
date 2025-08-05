@@ -47,7 +47,7 @@ public class OrderController {
         // 调用orderService处理创建预约的逻辑
         return orderService.makeOrder(orderVO,request);
     }
-    /*
+    /**
     * 取消预约接口
     * */
     @PostMapping("/Cancel")
