@@ -1,11 +1,9 @@
 package com.jason.classroom.controller;
 
 import com.jason.classroom.common.lang.Result;
-import com.jason.classroom.common.vo.OrderVO;
 import com.jason.classroom.common.vo.ViolationVO;
-import com.jason.classroom.service.NoticeService;
 import com.jason.classroom.service.ViolationService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/violation")
+@Api(tags = {"违规接口"})
 public class ViolationController {
     @Autowired
     private ViolationService violationService;
